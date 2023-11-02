@@ -1,0 +1,30 @@
+on:
+  workflow_call:
+    inputs:
+      build-config:
+        type: string
+
+jobs:
+
+  build:
+    strategy:
+      matrix:
+        include:
+          - ${{ fromjson(inputs.build-config) }}
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "$MATRIX"
+      env:
+        MATRIX: ${{ tojson(matrix) }}
+
+  # test:
+  #   needs: build
+  #   strategy:
+  #     matrix:
+  #       include:
+  #       - ${{ fromjson(inputs.build-config) }}
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #   - run: echo "$MATRIX"
+  #     env:
+  #       MATRIX: ${{ tojson(matrix) }}
