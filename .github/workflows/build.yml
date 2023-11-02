@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - ${{ fromjson(inputs.build-config) }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
     - run: echo "$MATRIX"
       env:
