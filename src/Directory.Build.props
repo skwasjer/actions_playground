@@ -1,0 +1,18 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>Martijn Bodeman</Authors>
+    <Company></Company>
+    <Copyright>Copyright © 2019</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/skwasjer/actions_playground</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>Release notes are at https://github.com/skwasjer/actions_playground/releases</PackageReleaseNotes>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AnalysisLevel>latest-All</AnalysisLevel>
+  </PropertyGroup>
+
+  <!--https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#use-case-multi-level-merging -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+</Project>

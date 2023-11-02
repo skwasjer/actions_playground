@@ -1,0 +1,7 @@
+assembly-versioning-scheme: MajorMinorPatch
+mode: ContinuousDelivery
+continuous-delivery-fallback-tag: 'ci'
+branches:
+  main:
+    regex: ^main$
+    tag: 'ci'
