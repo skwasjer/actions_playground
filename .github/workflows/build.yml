@@ -20,17 +20,34 @@ jobs:
       matrix:
         include:
           - ${{ fromjson(inputs.build-config) }}
+      fail-fast: false
     runs-on: ${{ matrix.os }}
+    env:
+      msbuildVersionArgs: /p:Version="${{ inputs.version }}" /p:PackageVersion="${{ inputs.package-version }}" /p:AssemblyVersion="${{ inputs.assembly-version }}" /p:FileVersion="${{ inputs.file-version }}" /p:InformationalVersion="${{ inputs.informational-version }}"
     steps:
-    - run: echo "$MATRIX"
-      env:
-        MATRIX: ${{ tojson(matrix) }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-    - run: echo ${{ inputs.version }}
-    - run: echo ${{ inputs.package-version }}
-    - run: echo ${{ inputs.assembly-version }}
-    - run: echo ${{ inputs.file-version }}
-    - run: echo ${{ inputs.informational-version }}
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            7.0.x
+            6.0.x
+      - run: dotnet --info
+
+      - run: dotnet build -c Release ${{ env.msbuildVersionArgs }}
+      - run: dotnet pack --no-build -c Release ${{ env.msbuildVersionArgs }}
+
+      - run: echo "$MATRIX"
+        env:
+          MATRIX: ${{ tojson(matrix) }}
+
+      - run: echo ${{ inputs.version }}
+      - run: echo ${{ inputs.package-version }}
+      - run: echo ${{ inputs.assembly-version }}
+      - run: echo ${{ inputs.file-version }}
+      - run: echo ${{ inputs.informational-version }}
 
   # test:
   #   needs: build
