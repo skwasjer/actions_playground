@@ -30,19 +30,40 @@ jobs:
         with:
           useConfigFile: true
 
-  build-and-test:
+  build:
     needs: determine-version
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+      dotnet-version: |
+        7.0.x
+        6.0.x
+      msbuildVersionArgs: /p:Version="${{ needs.determine-version.outputs.version }}" /p:PackageVersion="${{ needs.determine-version.outputs.package-version }}" /p:AssemblyVersion="${{ needs.determine-version.outputs.assembly-version }}" /p:FileVersion="${{ needs.determine-version.outputs.file-version }}" /p:InformationalVersion="${{ needs.determine-version.outputs.informational-version }}"
+    outputs:
+      dotnet-version: ${{ env.dotnet-version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
+
+      - run: dotnet --info
+      - run: dotnet build -c Release ${{ env.msbuildVersionArgs }}
+      - run: dotnet pack --no-build -c Release ${{ env.msbuildVersionArgs }}
+
+  test:
+    needs: build
     strategy:
       matrix:
         os:
         - ubuntu-latest
         - windows-latest
         - macos-latest
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/test.yml
     with:
       build-config: ${{ tojson(matrix) }}
-      version: ${{ needs.determine-version.outputs.version }}
-      package-version: ${{ needs.determine-version.outputs.package-version }}
-      assembly-version: ${{ needs.determine-version.outputs.assembly-version }}
-      file-version: ${{ needs.determine-version.outputs.file-version }}
-      informational-version: ${{ needs.determine-version.outputs.informational-version }}
+      dotnet-version: ${{ needs.build.outputs.dotnet-version }}
