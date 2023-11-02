@@ -4,7 +4,34 @@ on:
 
 name: build and test
 jobs:
+
+  determine-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.semVer }}
+      package-version: ${{ steps.gitversion.outputs.nuGetVersion }}
+      assembly-version: ${{ steps.gitversion.outputs.assemblySemVer }}
+      file-version: ${{ steps.gitversion.outputs.assemblySemFileVer }}
+      informational-version: ${{ steps.gitversion.outputs.informationalVersion }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+
+      - name: Determine version
+        uses: gittools/actions/gitversion/execute@v0
+        id: gitversion
+        with:
+          useConfigFile: true
+
   build-and-test:
+    needs: determine-version
     strategy:
       matrix:
         os:
@@ -14,3 +41,8 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       build-config: ${{ tojson(matrix) }}
+      version: ${{ needs.determine-version.outputs.version }}
+      package-version: ${{ needs.determine-version.outputs.package-version }}
+      assembly-version: ${{ needs.determine-version.outputs.assembly-version }}
+      file-version: ${{ needs.determine-version.outputs.file-version }}
+      informational-version: ${{ needs.determine-version.outputs.informational-version }}

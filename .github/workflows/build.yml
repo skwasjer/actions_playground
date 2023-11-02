@@ -3,9 +3,18 @@ on:
     inputs:
       build-config:
         type: string
+      version:
+        type: string
+      package-version:
+        type: string
+      assembly-version:
+        type: string
+      file-version:
+        type: string
+      informational-version:
+        type: string
 
 jobs:
-
   build:
     strategy:
       matrix:
@@ -16,6 +25,12 @@ jobs:
     - run: echo "$MATRIX"
       env:
         MATRIX: ${{ tojson(matrix) }}
+
+    - run: echo ${{ inputs.version }}
+    - run: echo ${{ inputs.package-version }}
+    - run: echo ${{ inputs.assembly-version }}
+    - run: echo ${{ inputs.file-version }}
+    - run: echo ${{ inputs.informational-version }}
 
   # test:
   #   needs: build
