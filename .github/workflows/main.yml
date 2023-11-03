@@ -50,10 +50,30 @@ jobs:
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.dotnet-version }}
-
       - run: dotnet --info
+
+      # Build
       - run: dotnet build -c Release ${{ env.msbuildVersionArgs }}
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: |
+            **/bin
+            **/obj
+          if-no-files-found: error
+          retention-days: 45
+
+      # Pack
       - run: dotnet pack --no-build -c Release ${{ env.msbuildVersionArgs }}
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: |
+            **/*.*nupkg
+          if-no-files-found: error
+          retention-days: 45
 
   test:
     needs: build
