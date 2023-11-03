@@ -3,6 +3,12 @@ on:
   - pull_request
 
 name: build and test
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  dotnet-version: |
+    7.0.x
+    6.0.x
 jobs:
 
   determine-version:
@@ -34,26 +40,24 @@ jobs:
     needs: determine-version
     runs-on: ubuntu-latest
     env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: true
-      DOTNET_NOLOGO: true
-      dotnet-version: |
-        7.0.x
-        6.0.x
-      msbuildVersionArgs: /p:Version="${{ needs.determine-version.outputs.version }}" /p:PackageVersion="${{ needs.determine-version.outputs.package-version }}" /p:AssemblyVersion="${{ needs.determine-version.outputs.assembly-version }}" /p:FileVersion="${{ needs.determine-version.outputs.file-version }}" /p:InformationalVersion="${{ needs.determine-version.outputs.informational-version }}"
+      msbuild-version-args: /p:Version="${{ needs.determine-version.outputs.version }}" /p:PackageVersion="${{ needs.determine-version.outputs.package-version }}" /p:AssemblyVersion="${{ needs.determine-version.outputs.assembly-version }}" /p:FileVersion="${{ needs.determine-version.outputs.file-version }}" /p:InformationalVersion="${{ needs.determine-version.outputs.informational-version }}"
     outputs:
       dotnet-version: ${{ env.dotnet-version }}
+      msbuild-version-args: ${{ env.msbuild-version-args }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
+      # Setup
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.dotnet-version }}
       - run: dotnet --info
 
+      # Checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
       # Build
-      - run: dotnet build -c Release ${{ env.msbuildVersionArgs }}
+      - run: dotnet build -c Release ${{ env.msbuild-version-args }}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -61,17 +65,6 @@ jobs:
           path: |
             **/bin
             **/obj
-          if-no-files-found: error
-          retention-days: 45
-
-      # Pack
-      - run: dotnet pack --no-build -c Release ${{ env.msbuildVersionArgs }}
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: release
-          path: |
-            **/*.*nupkg
           if-no-files-found: error
           retention-days: 45
 
@@ -87,3 +80,36 @@ jobs:
     with:
       build-config: ${{ tojson(matrix) }}
       dotnet-version: ${{ needs.build.outputs.dotnet-version }}
+
+  pack:
+    needs:
+      - build
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      # Setup
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
+
+      # Checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Restore state
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build
+
+      # Pack
+      - run: dotnet pack --no-build -c Release ${{ needs.build.outputs.msbuild-version-args }}
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: |
+            **/*.*nupkg
+          if-no-files-found: error
+          retention-days: 45
