@@ -7,7 +7,7 @@ on:
         type: string
 
 jobs:
-  build:
+  test:
     strategy:
       matrix:
         include:
@@ -22,6 +22,6 @@ jobs:
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ inputs.dotnet-version }}
-          
+
       - run: dotnet --info
       - run: dotnet test -c Release

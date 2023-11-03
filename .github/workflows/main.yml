@@ -14,7 +14,7 @@ jobs:
   determine-version:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.gitversion.outputs.semVer }}
+      version: ${{ steps.gitversion.outputs.fullSemVer }}
       package-version: ${{ steps.gitversion.outputs.nuGetVersion }}
       assembly-version: ${{ steps.gitversion.outputs.assemblySemVer }}
       file-version: ${{ steps.gitversion.outputs.assemblySemFileVer }}
@@ -38,6 +38,7 @@ jobs:
 
   build:
     needs: determine-version
+    name: build (v${{ needs.determine-version.outputs.version }})
     runs-on: ubuntu-latest
     env:
       msbuild-version-args: /p:Version="${{ needs.determine-version.outputs.version }}" /p:PackageVersion="${{ needs.determine-version.outputs.package-version }}" /p:AssemblyVersion="${{ needs.determine-version.outputs.assembly-version }}" /p:FileVersion="${{ needs.determine-version.outputs.file-version }}" /p:InformationalVersion="${{ needs.determine-version.outputs.informational-version }}"
@@ -66,7 +67,7 @@ jobs:
             **/bin
             **/obj
           if-no-files-found: error
-          retention-days: 45
+          retention-days: 1
 
   test:
     needs: build
