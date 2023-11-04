@@ -1,0 +1,3 @@
+[![Main workflow](https://github.com/skwasjer/actions_playground/actions/workflows/main.yml/badge.svg)](https://github.com/skwasjer/actions_playground/actions/workflows/main.yml) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=skwasjer_actions_playground&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=skwasjer_actions_playground) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=skwasjer_actions_playground&metric=coverage)](https://sonarcloud.io/summary/new_code?id=skwasjer_actions_playground)
+
+Playground for testing GH actions and to test my main build pipeline that I use for building, testing and deploying .NET NuGet packages in my other OSS projects.
