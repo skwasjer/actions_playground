@@ -1,0 +1,65 @@
+name: sonarcloud
+
+on:
+  workflow_call:
+    inputs:
+      pull-request: 
+        type: string
+      dotnet-version:
+        type: string
+  
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.pull-request != '' && fromjson(inputs.pull-request).head.sha || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Install Sonar scanner
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Install Coverlet
+        run: |
+          find ./test -type f -name "*Tests.csproj" -exec dotnet add "{}" package coverlet.msbuild \;
+
+      - name: Set env
+        run: |
+          echo "GITHUB_REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+          echo "SONAR_PROJECT_KEY=${GITHUB_REPOSITORY_OWNER}_${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+          echo "SONAR_ORG_KEY=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
+
+      - name: SonarCloud PR config
+        if: inputs.pull-request != ''
+        run: |
+          echo "SONAR_PR_ARGS=\
+          /d:sonar.pullrequest.key=${{ fromjson(inputs.pull-request).number }} \
+          /d:sonar.pullrequest.branch=${{ fromjson(inputs.pull-request).head.ref }} \
+          /d:sonar.pullrequest.base=${{ fromjson(inputs.pull-request).base.ref }} \
+          /d:sonar.scm.revision=${{ fromjson(inputs.pull-request).head.sha }}" >> $GITHUB_ENV
+
+      - name: Analyze with SonarCloud
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin /k:"$SONAR_PROJECT_KEY" /o:"$SONAR_ORG_KEY" /d:sonar.host.url=https://sonarcloud.io /d:sonar.token="$SONAR_TOKEN" /d:sonar.cs.opencover.reportsPaths="**/*opencover.xml" $SONAR_PR_ARGS
+
+          dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:ExcludeByFile="test/**/*.cs"
+
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"

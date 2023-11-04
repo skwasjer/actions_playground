@@ -1,6 +1,11 @@
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - main
+  # 'pull_request_target' exposes repo secrets and repo write permissions to PR, so manual approval is enforced 
+  # via 'external' environment. Jobs that require secrets should have an (indirect) dependency (needs) on the
+  # 'authorize' job.
+  pull_request_target:
 
 name: build and test
 env:
@@ -10,6 +15,16 @@ env:
     7.0.x
     6.0.x
 jobs:
+
+  authorize:
+    # Blog https://iterative.ai/blog/testing-external-contributions-using-github-actions-secrets
+    environment:
+      ${{ (github.event_name == 'pull_request_target' &&
+      github.event.pull_request.head.repo.full_name != github.repository) &&
+      'external' || 'internal' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ✓
 
   determine-version:
     runs-on: ubuntu-latest
@@ -37,7 +52,9 @@ jobs:
           useConfigFile: true
 
   build:
-    needs: determine-version
+    needs:
+      - authorize
+      - determine-version
     name: build (v${{ needs.determine-version.outputs.version }})
     runs-on: ubuntu-latest
     env:
@@ -81,6 +98,14 @@ jobs:
     with:
       build-config: ${{ tojson(matrix) }}
       dotnet-version: ${{ needs.build.outputs.dotnet-version }}
+
+  analysis:
+    needs: build
+    uses: ./.github/workflows/sonarcloud.yml
+    with:
+      pull-request: ${{ github.event_name == 'pull_request_target' && tojson(github.event.pull_request) || '' }}
+      dotnet-version: ${{ needs.build.outputs.dotnet-version }}
+    secrets: inherit
 
   pack:
     needs: build
