@@ -7,7 +7,7 @@ on:
   # 'authorize' job.
   pull_request_target:
 
-name: main build pipeline
+name: main
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
