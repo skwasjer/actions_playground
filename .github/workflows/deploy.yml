@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  nuget:
+  nuget_push:
     if: inputs.channel == 'nuget.org'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -17,4 +17,3 @@ jobs:
     steps:
       - run: echo ✓
     # dotnet nuget push **/*.nupkg --k ${{ secrets.NUGET_API_KEY }} -s ${{ env.NUGET_SOURCE_URL }}
-
