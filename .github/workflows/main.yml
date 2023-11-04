@@ -7,7 +7,7 @@ on:
   # 'authorize' job.
   pull_request_target:
 
-name: build and test
+name: main build pipeline
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
@@ -94,14 +94,14 @@ jobs:
         - ubuntu-latest
         - windows-latest
         - macos-latest
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/test.yml@main
     with:
       build-config: ${{ tojson(matrix) }}
       dotnet-version: ${{ needs.build.outputs.dotnet-version }}
 
   analysis:
     needs: build
-    uses: ./.github/workflows/sonarcloud.yml
+    uses: ./.github/workflows/sonarcloud.yml@main
     with:
       pull-request: ${{ github.event_name == 'pull_request_target' && tojson(github.event.pull_request) || '' }}
       dotnet-version: ${{ needs.build.outputs.dotnet-version }}
