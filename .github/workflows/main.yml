@@ -94,14 +94,14 @@ jobs:
         - ubuntu-latest
         - windows-latest
         - macos-latest
-    uses: ./.github/workflows/test.yml@main
+    uses: ./.github/workflows/test.yml
     with:
       build-config: ${{ tojson(matrix) }}
       dotnet-version: ${{ needs.build.outputs.dotnet-version }}
 
   analysis:
     needs: build
-    uses: ./.github/workflows/sonarcloud.yml@main
+    uses: ./.github/workflows/sonarcloud.yml
     with:
       pull-request: ${{ github.event_name == 'pull_request_target' && tojson(github.event.pull_request) || '' }}
       dotnet-version: ${{ needs.build.outputs.dotnet-version }}
