@@ -12,11 +12,13 @@ on:
 
 name: pipeline
 env:
+  ref: ${{ github.event.pull_request.head.sha || github.ref }}
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
   dotnet-version: |
     7.0.x
     6.0.x
+
 jobs:
 
   authorize:
@@ -40,6 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.ref }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -77,6 +80,7 @@ jobs:
       # Checkout
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.ref }}
           fetch-depth: 1
 
       # Build
@@ -102,6 +106,7 @@ jobs:
     uses: ./.github/workflows/test.yml
     with:
       build-config: ${{ tojson(matrix) }}
+      pull-request: ${{ github.event_name == 'pull_request_target' && tojson(github.event.pull_request) || '' }}
       dotnet-version: ${{ needs.build.outputs.dotnet-version }}
 
   analysis:
@@ -126,6 +131,7 @@ jobs:
       # Checkout
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.ref }}
           fetch-depth: 1
 
       # Restore build artifacts

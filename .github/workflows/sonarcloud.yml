@@ -5,7 +5,10 @@ on:
         type: string
       dotnet-version:
         type: string
-  
+
+env:
+  ref: ${{ inputs.pull-request != '' && fromjson(inputs.pull-request).head.sha || github.ref }}
+
 jobs:
   coverage-and-sca:
     runs-on: ubuntu-latest
@@ -13,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.pull-request != '' && fromjson(inputs.pull-request).head.sha || github.ref }}
+          ref: ${{ env.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-dotnet@v3
