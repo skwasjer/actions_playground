@@ -12,7 +12,7 @@ on:
 
 name: pipeline
 env:
-  ref: ${{ github.event.pull_request.head.sha || github.ref }}
+  ref: ${{ github.event.pull_request.head.ref || github.ref }}
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
   dotnet-version: |
