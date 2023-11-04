@@ -58,8 +58,8 @@ jobs:
 
   build:
     needs:
-      - authorize
       - determine-version
+      - authorize
     name: build (v${{ needs.determine-version.outputs.version }})
     runs-on: ubuntu-latest
     env:
@@ -89,7 +89,7 @@ jobs:
             **/bin
             **/obj
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
   test:
     needs: build
@@ -114,8 +114,8 @@ jobs:
 
   pack:
     needs:
-      - build
       - determine-version
+      - build
     runs-on: ubuntu-latest
     steps:
       # Setup
@@ -128,7 +128,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      # Restore state
+      # Restore build artifacts
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
@@ -147,15 +147,22 @@ jobs:
 
   deploy:
     needs:
+      - determine-version
       - test
       - analysis
       - pack
     if: github.event_name == 'release'
-    strategy:
-      matrix:
-        channel:
-          - nuget.org
-    uses: ./.github/workflows/deploy.yml
-    with:
-      channel: ${{ matrix.channel }}
-      environment: production
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      # Restore release artifacts
+      - name: Download release artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: release-${{ needs.determine-version.outputs.package-version }}
+
+      - name: push - nuget.org
+        env:
+          NUGET_SOURCE_URL: https://api.nuget.org/v3/index.json
+        run: echo push
+        #run: dotnet nuget push **/*.nupkg --k ${{ secrets.NUGET_API_KEY }} -s ${{ env.NUGET_SOURCE_URL }}
