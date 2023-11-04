@@ -2,6 +2,12 @@ on:
   push:
     branches:
       - main
+      - 'feature/**'
+      - 'chore/**'
+      - 'fix/**'
+  release:
+    types:
+      - published
   # 'pull_request_target' exposes repo secrets and repo write permissions to PR, so manual approval is enforced 
   # via 'external' environment. Jobs that require secrets should have an (indirect) dependency (needs) on the
   # 'authorize' job.
@@ -136,4 +142,19 @@ jobs:
           path: |
             **/*.*nupkg
           if-no-files-found: error
-          retention-days: 45
+          retention-days: 90
+
+  deploy:
+    needs:
+      - test
+      - analysis
+      - pack
+    if: github.event_name == 'release'
+    strategy:
+      matrix:
+        channel:
+          - nuget.org
+    uses: ./.github/workflows/deploy.yml
+    with:
+      channel: ${{ matrix.channel }}
+      environment: production

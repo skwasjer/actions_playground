@@ -1,0 +1,20 @@
+on:
+  workflow_call:
+    inputs:
+      channel:
+        type: string
+      environment:
+        type: string
+
+jobs:
+
+  nuget:
+    if: inputs.channel == 'nuget.org'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      NUGET_SOURCE_URL: https://api.nuget.org/v3/index.json
+    steps:
+      - run: echo ✓
+    # dotnet nuget push **/*.nupkg --k ${{ secrets.NUGET_API_KEY }} -s ${{ env.NUGET_SOURCE_URL }}
+
