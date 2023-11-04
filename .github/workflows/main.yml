@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.gitversion.outputs.fullSemVer }}
-      package-version: ${{ steps.gitversion.outputs.nuGetVersion }}
+      package-version: ${{ steps.gitversion.outputs.fullSemVer }}
       assembly-version: ${{ steps.gitversion.outputs.assemblySemVer }}
       file-version: ${{ steps.gitversion.outputs.assemblySemFileVer }}
       informational-version: ${{ steps.gitversion.outputs.informationalVersion }}
