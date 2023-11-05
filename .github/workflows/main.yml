@@ -20,6 +20,12 @@ env:
     6.0.x
 
 jobs:
+  echo-ref:
+    runs-on: ubuntu-latest
+    env:
+      json: ${{ tojson(github) }}
+    steps:
+      - run: echo $json
 
   authorize:
     # Blog https://iterative.ai/blog/testing-external-contributions-using-github-actions-secrets
