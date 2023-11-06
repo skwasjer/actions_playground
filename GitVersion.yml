@@ -5,3 +5,7 @@ branches:
   main:
     regex: ^main$
     tag: 'ci'
+  pull-request:
+    regex: ^(pull|pull\-requests|pr)[/-]
+    mode: ContinuousDelivery
+    tag: pr
