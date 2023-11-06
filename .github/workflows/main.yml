@@ -87,10 +87,27 @@ jobs:
         - ubuntu-latest
         - windows-latest
         - macos-latest
-    uses: ./.github/workflows/test.yml
-    with:
-      build-config: ${{ tojson(matrix) }}
-      dotnet-version: ${{ needs.build.outputs.dotnet-version }}
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Setup
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
+      
+      # Checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Restore build artifacts
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build
+
+      # Run all tests
+      - run: dotnet test --no-restore --no-build -c Release
 
   pack:
     needs:
