@@ -18,6 +18,8 @@ env:
 jobs:
   determine-version:
     runs-on: ubuntu-latest
+    env:
+      IGNORE_NORMALISATION_GIT_HEAD_MOVE: 1
     outputs:
       version: ${{ steps.gitversion.outputs.fullSemVer }}
       package-version: ${{ steps.gitversion.outputs.fullSemVer }}
@@ -33,8 +35,8 @@ jobs:
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.10.2
         with:
-          # v5.10.0 of GitVersion has a fix for incorrect versions when building tags. See https://github.com/GitTools/GitVersion/issues/2838
-          # It appears that the fix then had a regression in a later version, so locking in 5.10.0.  See https://github.com/GitTools/GitVersion/issues/3351#issuecomment-1403657689
+          # v5.10.0 of GitVersion has a fix for incorrect versions when building on tag. See https://github.com/GitTools/GitVersion/issues/2838
+          # It appears that the fix then had a regression in a later version, so pinning to v5.10.0.  See https://github.com/GitTools/GitVersion/issues/3351#issuecomment-1403657689
           versionSpec: '5.10.0' 
 
       - name: Determine version
@@ -113,7 +115,7 @@ jobs:
           name: build
 
       # Pack
-      - run: dotnet pack --no-build -c Release ${{ needs.build.outputs.msbuild-version-args }}
+      - run: dotnet pack --no-restore --no-build -c Release ${{ needs.build.outputs.msbuild-version-args }}
       - name: Upload release artifacts
         uses: actions/upload-artifact@v3
         with:
