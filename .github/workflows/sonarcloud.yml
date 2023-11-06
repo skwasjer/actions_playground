@@ -1,22 +1,40 @@
 on:
-  workflow_call:
-    inputs:
-      pull-request: 
-        type: string
-      dotnet-version:
-        type: string
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
+  pull_request_target: # This exposes repo secrets to PR, so manual approval via authorize job is enforced via 'external' environment.
+  workflow_dispatch:
 
+name: sonarcloud
 env:
-  ref: ${{ inputs.pull-request != '' && fromjson(inputs.pull-request).head.sha || github.ref }}
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  dotnet-version: |
+    7.0.x
+    6.0.x
 
 jobs:
-  coverage-and-sca:
+  # Blog https://iterative.ai/blog/testing-external-contributions-using-github-actions-secrets
+  authorize:
+    environment:
+      ${{ (github.event_name == 'pull_request_target' &&
+      github.event.pull_request.head.repo.full_name != github.repository) &&
+      'external' || 'internal' }}
     runs-on: ubuntu-latest
+    steps:
+      - run: echo ✓
 
+  analysis:
+    needs: authorize
+    runs-on: ubuntu-latest
+    environment: internal
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.ref }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-dotnet@v3
@@ -46,13 +64,13 @@ jobs:
           echo "SONAR_ORG_KEY=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
 
       - name: SonarCloud PR config
-        if: inputs.pull-request != ''
+        if: github.event_name == 'pull_request_target'
         run: |
           echo "SONAR_PR_ARGS=\
-          /d:sonar.pullrequest.key=${{ fromjson(inputs.pull-request).number }} \
-          /d:sonar.pullrequest.branch=${{ fromjson(inputs.pull-request).head.ref }} \
-          /d:sonar.pullrequest.base=${{ fromjson(inputs.pull-request).base.ref }} \
-          /d:sonar.scm.revision=${{ fromjson(inputs.pull-request).head.sha }}" >> $GITHUB_ENV
+          /d:sonar.pullrequest.key=${{ github.event.pull_request.number }} \
+          /d:sonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
+          /d:sonar.pullrequest.base=${{ github.event.pull_request.base.ref }} \
+          /d:sonar.scm.revision=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
 
       - name: Analyze with SonarCloud
         env:

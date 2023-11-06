@@ -3,13 +3,10 @@ on:
     inputs:
       build-config:
         type: string
-      pull-request: 
-        type: string
+        required: true
       dotnet-version:
         type: string
-
-env:
-  ref: ${{ inputs.pull-request != '' && fromjson(inputs.pull-request).head.sha || github.ref }}
+        required: true
 
 jobs:
   test:
@@ -22,7 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.ref }}
           fetch-depth: 1
 
       - uses: actions/setup-dotnet@v3
